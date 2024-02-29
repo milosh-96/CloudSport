@@ -14,7 +14,7 @@ namespace CloudSport.Cli
                 new FootballMatch("Wales",1,"Switzerland",1),
 
                 new FootballMatch("Turkey",0,"Wales",2),
-                new FootballMatch("Italy",3,"Switzerland",2),
+                new FootballMatch("Italy",3,"Switzerland",0),
 
                 new FootballMatch("Switzerland",3,"Turkey",1),
                 new FootballMatch("Italy",1,"Wales",0),

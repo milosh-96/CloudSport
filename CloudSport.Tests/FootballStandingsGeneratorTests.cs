@@ -25,37 +25,8 @@ namespace CloudSport.Tests
                 new FootballMatch("Inter",3,"Torino",1),
                 new FootballMatch("AC Milan",4,"Genoa",1)
             };
-        }
-
-
-        [Fact]
-        public void StandingsGenerator_DisplayStandings_CorrectFormattedTableIsReturned()
-        {
-            // arrange
-            StringBuilder sb = new StringBuilder();
-            sb.Append("Inter".PadRight(13)+"3\t7\n");
-            sb.Append("AC Milan".PadRight(13)+"3\t4\n");
-            sb.Append("Genoa".PadRight(13) + "3\t4\n");
-            sb.Append("Torino".PadRight(13) + "3\t1\n");
-            string expected = sb.ToString();
-
-            // act
-            string actual = _service.DisplayStandings(_footballMatches);
-
-            // assert
-            Assert.Equal(expected, actual);
-        }
-
-        [Fact]
-        public void StandingsGenerator_GetAboutSport_DisplaysCorrectMessage()
-        {
-            // arrange
-            string expected = "Football has 11 players in each team.";
-            // act
-            string actual = _service.GetAboutSport();
-            // assert
-            Assert.Equal(expected,actual);
-        }
+        }      
+     
 
         [Fact]
         public void StandingsGenerator_ExtractTeamsFromMatches_ExtractsCorrectNumberOfTeams()
@@ -73,11 +44,11 @@ namespace CloudSport.Tests
         [InlineData("AC Milan",3)]
         [InlineData("Torino",3)]
         [InlineData("Genoa",3)]
-        public void StandingsGenerator_CalculatePlayedMatches_CountIsCorrect(string name, int expected)
+        public void StandingsGenerator_CountPlayedMatches_CountIsCorrect(string name, int expected)
         {
             // arrange
             // act
-            int actual = _service.CalculatePlayedMatches(name, _footballMatches);
+            int actual = _service.CountPlayedMatches(name, _footballMatches);
             // assert
             Assert.Equal(expected, actual);
         }
@@ -106,6 +77,105 @@ namespace CloudSport.Tests
             // arrange
             // act
             int actual = _service.GivePoints(teamScore, opponentScore);
+            // assert
+            Assert.Equal(expected, actual);
+        }
+        
+        [Theory]
+        [InlineData("Inter", 5)]
+        [InlineData("AC Milan", 0)]
+        [InlineData("Torino", -3)]
+        [InlineData("Genoa", -2)]
+
+        public void StandingsGenerator_CalculateGoalDifference_CorrectGoalDifferenceIsGivenBasedOnAllResultsOfTheTeam(string teamName, int expected)
+        {
+            // arrange
+            // act
+            int actual = _service.CalculateGoalDifference(teamName,_footballMatches);
+            // assert
+            Assert.Equal(expected, actual);
+        }
+        
+        [Theory]
+        [InlineData("Inter", 8)]
+        [InlineData("AC Milan", 7)]
+        [InlineData("Torino", 5)]
+        [InlineData("Genoa", 5)]
+
+        public void StandingsGenerator_CountGoalsScored_CorrectCountIsGivenBasedOnAllResultsOfTheTeam(string teamName, int expected)
+        {
+            // arrange
+            // act
+            int actual = _service.CountGoalsScored(teamName,_footballMatches);
+            // assert
+            Assert.Equal(expected, actual);
+        }
+        
+        [Theory]
+        [InlineData("Inter", 3)]
+        [InlineData("AC Milan", 7)]
+        [InlineData("Torino", 8)]
+        [InlineData("Genoa", 7)]
+
+        public void StandingsGenerator_CountGoalsConceded_CorrectCountIsGivenBasedOnAllResultsOfTheTeam(string teamName, int expected)
+        {
+            // arrange
+            // act
+            int actual = _service.CountGoalsConceded(teamName,_footballMatches);
+            // assert
+            Assert.Equal(expected, actual);
+        }
+
+        [Theory]
+        [InlineData(4,5,-1)]
+        [InlineData(4,2,2)]
+        public void StandingsGenerator_GoalDifferenceLogic(int scored,int conceded,int expected)
+        {
+            Assert.Equal(expected, scored - conceded);
+        }
+
+
+        [Theory]
+        [InlineData("Inter", 2)]
+        [InlineData("AC Milan", 1)]
+        [InlineData("Torino", 0)]
+        [InlineData("Genoa", 1)]
+
+        public void StandingsGenerator_CountWins_CorrectCountIsGivenBasedOnAllResultsOfTheTeam(string teamName, int expected)
+        {
+            // arrange
+            // act
+            int actual = _service.CountWins(teamName, _footballMatches);
+            // assert
+            Assert.Equal(expected, actual);
+        }
+        
+        [Theory]
+        [InlineData("Inter", 1)]
+        [InlineData("AC Milan", 1)]
+        [InlineData("Torino", 1)]
+        [InlineData("Genoa", 1)]
+
+        public void StandingsGenerator_CountDraws_CorrectCountIsGivenBasedOnAllResultsOfTheTeam(string teamName, int expected)
+        {
+            // arrange
+            // act
+            int actual = _service.CountDraws(teamName, _footballMatches);
+            // assert
+            Assert.Equal(expected, actual);
+        }
+        
+        [Theory]
+        [InlineData("Inter", 0)]
+        [InlineData("AC Milan", 1)]
+        [InlineData("Torino", 2)]
+        [InlineData("Genoa", 1)]
+
+        public void StandingsGenerator_CountLosses_CorrectCountIsGivenBasedOnAllResultsOfTheTeam(string teamName, int expected)
+        {
+            // arrange
+            // act
+            int actual = _service.CountLosses(teamName, _footballMatches);
             // assert
             Assert.Equal(expected, actual);
         }

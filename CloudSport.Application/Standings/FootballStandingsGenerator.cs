@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace CloudSport.Application.Standings
@@ -18,9 +19,28 @@ namespace CloudSport.Application.Standings
         {
             var standings = GenerateStandings(matches);
             StringBuilder output = new StringBuilder();
+            //headers//
+            output.Append("Team".PadRight(13));
+            output.Append("MP\t\t");
+            output.Append("W\t\t");
+            output.Append("D\t\t");
+            output.Append("L\t\t");
+            output.Append("GS\t");
+            output.Append("GC\t");
+            output.Append("GD\t");
+            output.Append("Pts\n");
+            output.AppendLine("".PadRight(13*9,'-'));
             foreach(var standing in standings)
             {
-                output.Append($"{standing.Team.Name.PadRight(13)}{standing.MatchesPlayed}\t{standing.Points}\n");
+                output.Append(standing.Team.Name.PadRight(13));
+                output.Append($"{standing.MatchesPlayed}\t\t");
+                output.Append($"{standing.Wins}\t\t");
+                output.Append($"{standing.Draws}\t\t");
+                output.Append($"{standing.Losses}\t\t");
+                output.Append($"{standing.GoalsScored}\t");
+                output.Append($"{standing.GoalsConceded}\t");
+                output.Append($"{standing.GoalsDifference}\t");
+                output.Append($"{standing.Points}\n");
             }
             return output.ToString();
         }
@@ -33,13 +53,22 @@ namespace CloudSport.Application.Standings
                 var standingsItem = new FootballStandingsItem()
                 {
                     Team = team,
-                    MatchesPlayed = CalculatePlayedMatches(team.Name, matches),
-                    Points = CalculatePoints(team.Name, matches)
+                    MatchesPlayed = CountPlayedMatches(team.Name, matches),
+                    Wins = CountWins(team.Name, matches),
+                    Draws = CountDraws(team.Name, matches),
+                    Losses = CountLosses(team.Name, matches),
+                    Points = CalculatePoints(team.Name, matches),
+                    GoalsScored = CountGoalsScored(team.Name, matches),
+                    GoalsConceded = CountGoalsConceded(team.Name, matches),
+                    GoalsDifference = CalculateGoalDifference(team.Name, matches)
                 };
                 standings.Add(standingsItem);
             }
          
-            return standings.OrderByDescending(x => x.Points).ThenBy(x => x.Team.Name).ToList();
+            return standings.OrderByDescending(x => x.Points)
+                            .ThenByDescending(x=>x.GoalsDifference)
+                            .ThenBy(x => x.Team.Name)
+                            .ToList();
         }
 
         public List<FootballTeam> ExtractTeamsFromMatches(List<FootballMatch> matches)
@@ -72,7 +101,7 @@ namespace CloudSport.Application.Standings
             }
         }
 
-        public int CalculatePlayedMatches(string name, List<FootballMatch> footballMatches)
+        public int CountPlayedMatches(string name, List<FootballMatch> footballMatches)
         {
             int count = 0;
             foreach (var match in footballMatches)
@@ -120,6 +149,129 @@ namespace CloudSport.Application.Standings
                 points = 1;
             }
             return points;
+        }
+
+        public int CalculateGoalDifference(string teamName, List<FootballMatch> matches)
+        {
+            int scored = 0;
+            int conceded = 0;
+            int count = 0;
+            foreach(var match in matches)
+            {
+                if(match.HomeTeam.Team.Name == teamName)
+                {
+                    scored += match.HomeTeam.Stats.Goals;
+                    conceded += match.AwayTeam.Stats.Goals;
+                }
+                else if(match.AwayTeam.Team.Name == teamName)
+                {
+                    scored += match.AwayTeam.Stats.Goals;
+                    conceded += match.HomeTeam.Stats.Goals;
+                }
+            }
+            count = scored - conceded;
+            return count;
+        }
+        
+        public int CountGoalsScored(string teamName, List<FootballMatch> matches)
+        {
+            int count = 0;
+            foreach(var match in matches)
+            {
+                if(match.HomeTeam.Team.Name == teamName)
+                {
+                    count += match.HomeTeam.Stats.Goals;
+                }
+                else if(match.AwayTeam.Team.Name == teamName)
+                {
+                    count += match.AwayTeam.Stats.Goals;
+                }
+            }
+            return count;
+        }
+        public int CountGoalsConceded(string teamName, List<FootballMatch> matches)
+        {
+            int count = 0;
+            foreach(var match in matches)
+            {
+                if(match.HomeTeam.Team.Name == teamName)
+                {
+                    count += match.AwayTeam.Stats.Goals;
+                }
+                else if(match.AwayTeam.Team.Name == teamName)
+                {
+                    count += match.HomeTeam.Stats.Goals;
+                }
+            }
+            return count;
+        } 
+        
+        public int CountWins(string teamName, List<FootballMatch> matches)
+        {
+            int count = 0;
+            foreach(var match in matches)
+            {
+                var homeTeam = match.HomeTeam;
+                var awayTeam = match.AwayTeam;
+                if (homeTeam.Team.Name == teamName)
+                {
+                    if (homeTeam.Stats.Goals > awayTeam.Stats.Goals)
+                    {
+                        count += 1;
+                    }
+                }
+                else if(awayTeam.Team.Name == teamName)
+                {
+                    if (awayTeam.Stats.Goals > homeTeam.Stats.Goals)
+                    {
+                        count += 1;
+                    }
+                }
+            }
+            return count;
+        }
+
+        public int CountLosses(string teamName, List<FootballMatch> matches)
+        {
+            int count = 0;
+            foreach (var match in matches)
+            {
+                var homeTeam = match.HomeTeam;
+                var awayTeam = match.AwayTeam;
+                if (homeTeam.Team.Name == teamName)
+                {
+                    if (homeTeam.Stats.Goals < awayTeam.Stats.Goals)
+                    {
+                        count += 1;
+                    }
+                }
+                else if (awayTeam.Team.Name == teamName)
+                {
+                    if (awayTeam.Stats.Goals < homeTeam.Stats.Goals)
+                    {
+                        count += 1;
+                    }
+                }
+            }
+            return count;
+        } 
+        
+        public int CountDraws(string teamName, List<FootballMatch> matches)
+        {
+            int count = 0;
+            foreach (var match in matches)
+            {
+                var homeTeam = match.HomeTeam;
+                var awayTeam = match.AwayTeam;
+                if (homeTeam.Team.Name == teamName || awayTeam.Team.Name == teamName)
+                {
+                    if (homeTeam.Stats.Goals == awayTeam.Stats.Goals)
+                    {
+                        count += 1;
+                    }
+                }
+            }
+            return count;
         }
     }
 }
